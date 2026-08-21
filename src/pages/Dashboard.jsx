@@ -1,12 +1,7 @@
 import { useEffect, useState } from 'react'
-import PageTitle from '../components/PageTitle'
+import { supabase } from '../services/supabaseClient'
 import StatCard from '../components/StatCard'
-import { getStudentsCount } from '../services/studentService'
-import { getCoursesCount } from '../services/courseService'
-import {
-  getEnrollmentsCount,
-  getEnrollmentsCountByStatus,
-} from '../services/enrollmentService'
+import PageTitle from '../components/PageTitle'
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -23,19 +18,47 @@ function Dashboard() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const [students, courses, enrollments, active, completed, cancelled] =
-          await Promise.all([
-            getStudentsCount(),
-            getCoursesCount(),
-            getEnrollmentsCount(),
-            getEnrollmentsCountByStatus('ACTIVE'),
-            getEnrollmentsCountByStatus('COMPLETED'),
-            getEnrollmentsCountByStatus('CANCELLED'),
-          ])
+        const [
+          { count: studentsCount, error: e1 },
+          { count: coursesCount, error: e2 },
+          { count: enrollmentsCount, error: e3 },
+          { count: activeCount, error: e4 },
+          { count: completedCount, error: e5 },
+          { count: cancelledCount, error: e6 },
+        ] = await Promise.all([
+          supabase.from('students').select('*', { count: 'exact', head: true }),
+          supabase.from('courses').select('*', { count: 'exact', head: true }),
+          supabase.from('enrollments').select('*', { count: 'exact', head: true }),
+          supabase
+            .from('enrollments')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'ACTIVE'),
+          supabase
+            .from('enrollments')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'COMPLETED'),
+          supabase
+            .from('enrollments')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'CANCELLED'),
+        ])
 
-        setStats({ students, courses, enrollments, active, completed, cancelled })
+        const firstError = e1 || e2 || e3 || e4 || e5 || e6
+        if (firstError) throw firstError
+
+        setStats({
+          students: studentsCount ?? 0,
+          courses: coursesCount ?? 0,
+          enrollments: enrollmentsCount ?? 0,
+          active: activeCount ?? 0,
+          completed: completedCount ?? 0,
+          cancelled: cancelledCount ?? 0,
+        })
       } catch (err) {
-        setError(err.message ?? 'Error al cargar las métricas')
+        console.error(err)
+        setError(
+          'No se pudieron cargar las estadísticas. Verifica que las tablas existan en Supabase.'
+        )
       } finally {
         setLoading(false)
       }
@@ -45,28 +68,21 @@ function Dashboard() {
   }, [])
 
   return (
-    <div>
-      <PageTitle
-        title="Dashboard"
-        subtitle="Bienvenido al Sistema de Gestión de Cursos"
-      />
-
-      {error && (
-        <p className="text-red-600 text-sm mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
-          {error}
-        </p>
-      )}
+    <div className="p-6">
+      <PageTitle title="Dashboard" subtitle="Bienvenido al Sistema de Gestión de Cursos" />
 
       {loading ? (
         <p className="text-gray-400">Cargando datos...</p>
+      ) : error ? (
+        <p className="text-red-600 text-sm">{error}</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <StatCard title="Total Students" total={stats.students} />
-          <StatCard title="Total Courses" total={stats.courses} />
-          <StatCard title="Total Enrollments" total={stats.enrollments} />
-          <StatCard title="Active Enrollments" total={stats.active} />
-          <StatCard title="Completed Enrollments" total={stats.completed} />
-          <StatCard title="Cancelled Enrollments" total={stats.cancelled} />
+          <StatCard title="Total Estudiantes" total={stats.students} />
+<StatCard title="Total Cursos" total={stats.courses} /> 
+<StatCard title="Total Matrículas" total={stats.enrollments} />
+<StatCard title="Matrículas Activas" total={stats.active} />
+<StatCard title="Matrículas Completadas" total={stats.completed} />
+<StatCard title="Matrículas Canceladas" total={stats.cancelled} />
         </div>
       )}
     </div>

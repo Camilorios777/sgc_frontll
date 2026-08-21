@@ -1,37 +1,35 @@
 function CourseTable({ courses, onEdit, onDelete }) {
-  if (courses.length === 0) return null
-
   return (
-    <div className="overflow-x-auto bg-white rounded-lg border border-gray-100 shadow-sm">
-      <table className="w-full text-sm">
-        <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
+    <div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-100">
+      <table className="min-w-full text-sm text-left">
+        <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
           <tr>
-            <th className="px-4 py-3 text-left">Código</th>
-            <th className="px-4 py-3 text-left">Nombre</th>
-            <th className="px-4 py-3 text-left">Descripción</th>
-            <th className="px-4 py-3 text-left">Capacidad</th>
+            <th className="px-4 py-3">Código</th>
+            <th className="px-4 py-3">Nombre</th>
+            <th className="px-4 py-3">Descripción</th>
+            <th className="px-4 py-3">Cupo máximo</th>
             <th className="px-4 py-3 text-right">Acciones</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {courses.map((course) => (
             <tr key={course.id} className="hover:bg-gray-50">
-              <td className="px-4 py-3 font-medium text-gray-800">{course.code}</td>
-              <td className="px-4 py-3 text-gray-600">{course.name}</td>
-              <td className="px-4 py-3 text-gray-600 max-w-xs truncate">{course.description}</td>
+              <td className="px-4 py-3 text-gray-800 font-medium">{course.code}</td>
+              <td className="px-4 py-3 text-gray-800">{course.name}</td>
+              <td className="px-4 py-3 text-gray-600 max-w-xs truncate">
+                {course.description}
+              </td>
               <td className="px-4 py-3 text-gray-600">{course.max_capacity}</td>
-              <td className="px-4 py-3 text-right">
+              <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
                 <button
-                  type="button"
                   onClick={() => onEdit(course)}
-                  className="text-blue-600 hover:text-blue-800 font-medium mr-3"
+                  className="text-blue-600 hover:underline text-sm font-medium"
                 >
                   Editar
                 </button>
                 <button
-                  type="button"
                   onClick={() => onDelete(course)}
-                  className="text-red-600 hover:text-red-800 font-medium"
+                  className="text-red-600 hover:underline text-sm font-medium"
                 >
                   Eliminar
                 </button>

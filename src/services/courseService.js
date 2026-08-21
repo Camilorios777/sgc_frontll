@@ -1,10 +1,12 @@
-import { supabase } from './supabase'
+import { supabase } from './supabaseClient'
+
+const TABLE = 'courses'
 
 export async function getCourses() {
   const { data, error } = await supabase
-    .from('courses')
+    .from(TABLE)
     .select('*')
-    .order('name', { ascending: true })
+    .order('id', { ascending: true })
 
   if (error) throw error
   return data
@@ -12,47 +14,38 @@ export async function getCourses() {
 
 export async function createCourse(course) {
   const { data, error } = await supabase
-    .from('courses')
-    .insert({
-      code: course.code,
-      name: course.name,
-      description: course.description,
-      max_capacity: course.maxCapacity,
-    })
+    .from(TABLE)
+    .insert([
+      {
+        code: course.code,
+        name: course.name,
+        description: course.description,
+        max_capacity: Number(course.maxCapacity),
+      },
+    ])
     .select()
-    .single()
 
   if (error) throw error
-  return data
+  return data[0]
 }
 
 export async function updateCourse(id, course) {
   const { data, error } = await supabase
-    .from('courses')
+    .from(TABLE)
     .update({
       code: course.code,
       name: course.name,
       description: course.description,
-      max_capacity: course.maxCapacity,
+      max_capacity: Number(course.maxCapacity),
     })
     .eq('id', id)
     .select()
-    .single()
 
   if (error) throw error
-  return data
+  return data[0]
 }
 
 export async function deleteCourse(id) {
-  const { error } = await supabase.from('courses').delete().eq('id', id)
+  const { error } = await supabase.from(TABLE).delete().eq('id', id)
   if (error) throw error
-}
-
-export async function getCoursesCount() {
-  const { count, error } = await supabase
-    .from('courses')
-    .select('*', { count: 'exact', head: true })
-
-  if (error) throw error
-  return count ?? 0
 }

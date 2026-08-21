@@ -1,115 +1,85 @@
 import { useEffect, useState } from 'react'
 import PrimaryButton from './PrimaryButton'
 
-const emptyForm = {
-  studentId: '',
-  courseId: '',
-  enrollmentDate: new Date().toISOString().split('T')[0],
-  status: 'ACTIVE',
-}
-
-function EnrollmentForm({ open, onClose, onSubmit, students, courses }) {
-  const [form, setForm] = useState(emptyForm)
+function EnrollmentForm({ open, students, courses, onSubmit, onCancel }) {
+  const [studentId, setStudentId] = useState('')
+  const [courseId, setCourseId] = useState('')
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    setForm({
-      ...emptyForm,
-      enrollmentDate: new Date().toISOString().split('T')[0],
-    })
-    setError('')
+    if (open) {
+      setStudentId('')
+      setCourseId('')
+      setError('')
+    }
   }, [open])
 
   if (!open) return null
 
-  function handleChange(e) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
-  }
-
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
+    if (!studentId || !courseId) {
+      setError('Selecciona un estudiante y un curso.')
+      return
+    }
+    setSaving(true)
     try {
-      await onSubmit(form)
-      onClose()
+      await onSubmit({ studentId: Number(studentId), courseId: Number(courseId) })
     } catch (err) {
-      setError(err.message ?? 'Error al crear la matrícula')
+      setError(err.message ?? 'Ocurrió un error al matricular.')
+    } finally {
+      setSaving(false)
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
-        <h2 className="text-lg font-semibold text-gray-800">Nueva matrícula</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Nueva matrícula</h2>
 
-        <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Estudiante</label>
+            <label className="text-sm font-medium text-gray-600">Estudiante</label>
             <select
-              name="studentId"
-              value={form.studentId}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={studentId}
+              onChange={(e) => setStudentId(e.target.value)}
+              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">Seleccionar estudiante</option>
+              <option value="">Selecciona un estudiante</option>
               {students.map((student) => (
                 <option key={student.id} value={student.id}>
-                  {student.first_name} {student.last_name} ({student.email})
+                  {student.first_name} {student.last_name}
                 </option>
               ))}
             </select>
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Curso</label>
+            <label className="text-sm font-medium text-gray-600">Curso</label>
             <select
-              name="courseId"
-              value={form.courseId}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={courseId}
+              onChange={(e) => setCourseId(e.target.value)}
+              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">Seleccionar curso</option>
+              <option value="">Selecciona un curso</option>
               {courses.map((course) => (
                 <option key={course.id} value={course.id}>
-                  {course.code} — {course.name}
+                  {course.code} - {course.name}
                 </option>
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de matrícula</label>
-            <input
-              name="enrollmentDate"
-              type="date"
-              value={form.enrollmentDate}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-            <select
-              name="status"
-              value={form.status}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="ACTIVE">Activa</option>
-              <option value="COMPLETED">Completada</option>
-              <option value="CANCELLED">Cancelada</option>
-            </select>
-          </div>
 
-          {error && <p className="text-red-600 text-sm">{error}</p>}
+          {error && <p className="text-sm text-red-600">{error}</p>}
 
-          <div className="flex justify-end gap-3 pt-2">
-            <PrimaryButton type="button" variant="secondary" onClick={onClose}>
+          <div className="flex justify-end gap-2 mt-4">
+            <PrimaryButton type="button" variant="secondary" onClick={onCancel}>
               Cancelar
             </PrimaryButton>
-            <PrimaryButton type="submit">Crear matrícula</PrimaryButton>
+            <PrimaryButton type="submit" disabled={saving}>
+              {saving ? 'Matriculando...' : 'Matricular'}
+            </PrimaryButton>
           </div>
         </form>
       </div>

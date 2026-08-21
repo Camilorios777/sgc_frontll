@@ -2,16 +2,16 @@ import { NavLink } from 'react-router-dom'
 
 const links = [
   { to: '/', label: 'Dashboard' },
-  { to: '/students', label: 'Students' },
-  { to: '/courses', label: 'Courses' },
-  { to: '/enrollments', label: 'Enrollments' },
+  { to: '/students', label: 'Estudiantes' },
+  { to: '/courses', label: 'Cursos' },
+  { to: '/enrollments', label: 'Matrículas' },
 ]
 
 function Sidebar() {
   return (
     <aside className="h-screen w-60 bg-gray-900 text-white flex flex-col">
       <div className="px-6 py-5 text-lg font-bold border-b border-gray-800">
-        Gestión de Cursos
+        Sistema de Gestión de Cursos
       </div>
 
       <nav className="flex-1 px-3 py-4">

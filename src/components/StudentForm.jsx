@@ -1,14 +1,9 @@
 import { useEffect, useState } from 'react'
 import PrimaryButton from './PrimaryButton'
 
-const emptyForm = {
-  firstName: '',
-  lastName: '',
-  email: '',
-  birthDate: '',
-}
+const emptyForm = { firstName: '', lastName: '', email: '', phone: '' }
 
-function StudentForm({ open, onClose, onSubmit, initialData }) {
+function StudentForm({ open, initialData, onSubmit, onCancel }) {
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState('')
 
@@ -18,7 +13,7 @@ function StudentForm({ open, onClose, onSubmit, initialData }) {
         firstName: initialData.first_name ?? '',
         lastName: initialData.last_name ?? '',
         email: initialData.email ?? '',
-        birthDate: initialData.birth_date ?? '',
+        phone: initialData.phone ?? '',
       })
     } else {
       setForm(emptyForm)
@@ -29,80 +24,80 @@ function StudentForm({ open, onClose, onSubmit, initialData }) {
   if (!open) return null
 
   function handleChange(e) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    setForm({ ...form, [e.target.name]: e.target.value })
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
+    if (!form.firstName || !form.lastName || !form.email || !form.phone) {
+      setError('Todos los campos son obligatorios.')
+      return
+    }
     try {
       await onSubmit(form)
-      onClose()
     } catch (err) {
-      setError(err.message ?? 'Error al guardar el estudiante')
+      setError(err.message ?? 'Ocurrió un error al guardar.')
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
-        <h2 className="text-lg font-semibold text-gray-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">
           {initialData ? 'Editar estudiante' : 'Nuevo estudiante'}
         </h2>
 
-        <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+            <label className="text-sm font-medium text-gray-600">Nombre</label>
             <input
               name="firstName"
               value={form.firstName}
               onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+            <label className="text-sm font-medium text-gray-600">Apellido</label>
             <input
               name="lastName"
               value={form.lastName}
               onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="text-sm font-medium text-gray-600">Correo</label>
             <input
-              name="email"
               type="email"
+              name="email"
               value={form.email}
               onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de nacimiento</label>
+            <label className="text-sm font-medium text-gray-600">Celular</label>
             <input
-              name="birthDate"
-              type="date"
-              value={form.birthDate}
+              type="tel"
+              name="phone"
+              value={form.phone}
               onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ej: 3052342345"
+              className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          {error && <p className="text-red-600 text-sm">{error}</p>}
+          {error && <p className="text-sm text-red-600">{error}</p>}
 
-          <div className="flex justify-end gap-3 pt-2">
-            <PrimaryButton type="button" variant="secondary" onClick={onClose}>
+          <div className="flex justify-end gap-2 mt-4">
+            <PrimaryButton type="button" variant="secondary" onClick={onCancel}>
               Cancelar
             </PrimaryButton>
-            <PrimaryButton type="submit">
-              {initialData ? 'Guardar cambios' : 'Crear'}
-            </PrimaryButton>
+            <PrimaryButton type="submit">Guardar</PrimaryButton>
           </div>
         </form>
       </div>

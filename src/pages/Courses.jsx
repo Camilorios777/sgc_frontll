@@ -1,120 +1,131 @@
-import { useCallback, useEffect, useState } from 'react'
-import PageTitle from '../components/PageTitle'
-import PrimaryButton from '../components/PrimaryButton'
-import CourseTable from '../components/CourseTable'
-import CourseForm from '../components/CourseForm'
-import ConfirmDialog from '../components/ConfirmDialog'
-import EmptyState from '../components/EmptyState'
+import { useEffect, useMemo, useState } from 'react'
 import {
   getCourses,
   createCourse,
   updateCourse,
   deleteCourse,
 } from '../services/courseService'
+import PageTitle from '../components/PageTitle'
+import PrimaryButton from '../components/PrimaryButton'
+import CourseTable from '../components/CourseTable'
+import CourseForm from '../components/CourseForm'
+import ConfirmDialog from '../components/ConfirmDialog'
+import EmptyState from '../components/EmptyState'
 
 function Courses() {
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [formOpen, setFormOpen] = useState(false)
-  const [editingCourse, setEditingCourse] = useState(null)
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [deletingCourse, setDeletingCourse] = useState(null)
+  const [search, setSearch] = useState('')
 
-  const loadCourses = useCallback(async () => {
+  const [formOpen, setFormOpen] = useState(false)
+  const [editing, setEditing] = useState(null)
+
+  const [deleteTarget, setDeleteTarget] = useState(null)
+
+  async function loadCourses() {
+    setLoading(true)
     try {
-      setError('')
       const data = await getCourses()
       setCourses(data)
+      setError('')
     } catch (err) {
-      setError(err.message ?? 'Error al cargar cursos')
+      console.error(err)
+      setError('No se pudieron cargar los cursos.')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }
 
   useEffect(() => {
     loadCourses()
-  }, [loadCourses])
+  }, [])
 
-  async function handleSubmit(formData) {
-    if (editingCourse) {
-      await updateCourse(editingCourse.id, formData)
+  const filteredCourses = useMemo(() => {
+    const term = search.trim().toLowerCase()
+    if (!term) return courses
+    return courses.filter((c) =>
+      [c.code, c.name, c.description]
+        .filter(Boolean)
+        .some((field) => field.toLowerCase().includes(term))
+    )
+  }, [courses, search])
+
+  function handleCreate() {
+    setEditing(null)
+    setFormOpen(true)
+  }
+
+  function handleEdit(course) {
+    setEditing(course)
+    setFormOpen(true)
+  }
+
+  async function handleSubmit(form) {
+    if (editing) {
+      await updateCourse(editing.id, form)
     } else {
-      await createCourse(formData)
+      await createCourse(form)
     }
+    setFormOpen(false)
+    setEditing(null)
     await loadCourses()
   }
 
-  async function handleConfirmDelete() {
-    try {
-      await deleteCourse(deletingCourse.id)
-      setConfirmOpen(false)
-      setDeletingCourse(null)
-      await loadCourses()
-    } catch (err) {
-      setError(err.message ?? 'Error al eliminar curso')
-      setConfirmOpen(false)
-    }
+  async function confirmDelete() {
+    await deleteCourse(deleteTarget.id)
+    setDeleteTarget(null)
+    await loadCourses()
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <PageTitle title="Courses" subtitle="Gestión de cursos" />
-        <PrimaryButton
-          onClick={() => {
-            setEditingCourse(null)
-            setFormOpen(true)
-          }}
-        >
-          + Nuevo curso
-        </PrimaryButton>
-      </div>
+    <div className="p-6">
+      <PageTitle
+        title="Cursos"
+        subtitle="Gestión de cursos disponibles"
+        action={<PrimaryButton onClick={handleCreate}>Nuevo Curso</PrimaryButton>}
+      />
 
-      {error && (
-        <p className="text-red-600 text-sm mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
-          {error}
-        </p>
-      )}
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Buscar curso..."
+        className="w-full mb-4 border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
 
       {loading ? (
         <p className="text-gray-400">Cargando cursos...</p>
-      ) : courses.length === 0 ? (
-        <EmptyState message="No hay cursos registrados. Crea el primero." />
-      ) : (
-        <CourseTable
-          courses={courses}
-          onEdit={(course) => {
-            setEditingCourse(course)
-            setFormOpen(true)
-          }}
-          onDelete={(course) => {
-            setDeletingCourse(course)
-            setConfirmOpen(true)
-          }}
+      ) : error ? (
+        <p className="text-red-600 text-sm">{error}</p>
+      ) : filteredCourses.length === 0 ? (
+        <EmptyState
+          message={
+            search
+              ? 'No se encontraron cursos con ese criterio.'
+              : 'Aún no hay cursos registrados.'
+          }
         />
+      ) : (
+        <CourseTable courses={filteredCourses} onEdit={handleEdit} onDelete={setDeleteTarget} />
       )}
 
       <CourseForm
         open={formOpen}
-        onClose={() => {
-          setFormOpen(false)
-          setEditingCourse(null)
-        }}
+        initialData={editing}
         onSubmit={handleSubmit}
-        initialData={editingCourse}
+        onCancel={() => {
+          setFormOpen(false)
+          setEditing(null)
+        }}
       />
 
       <ConfirmDialog
-        open={confirmOpen}
+        open={!!deleteTarget}
         title="Eliminar curso"
-        message={`¿Estás seguro de eliminar el curso "${deletingCourse?.name}"?`}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => {
-          setConfirmOpen(false)
-          setDeletingCourse(null)
-        }}
+        message={`¿Seguro que deseas eliminar el curso ${deleteTarget?.name ?? ''}? Esta acción no se puede deshacer.`}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
     </div>
   )

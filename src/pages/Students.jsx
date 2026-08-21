@@ -1,120 +1,131 @@
-import { useCallback, useEffect, useState } from 'react'
-import PageTitle from '../components/PageTitle'
-import PrimaryButton from '../components/PrimaryButton'
-import StudentTable from '../components/StudentTable'
-import StudentForm from '../components/StudentForm'
-import ConfirmDialog from '../components/ConfirmDialog'
-import EmptyState from '../components/EmptyState'
+import { useEffect, useMemo, useState } from 'react'
 import {
   getStudents,
   createStudent,
   updateStudent,
   deleteStudent,
 } from '../services/studentService'
+import PageTitle from '../components/PageTitle'
+import PrimaryButton from '../components/PrimaryButton'
+import StudentTable from '../components/StudentTable'
+import StudentForm from '../components/StudentForm'
+import ConfirmDialog from '../components/ConfirmDialog'
+import EmptyState from '../components/EmptyState'
 
 function Students() {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [formOpen, setFormOpen] = useState(false)
-  const [editingStudent, setEditingStudent] = useState(null)
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [deletingStudent, setDeletingStudent] = useState(null)
+  const [search, setSearch] = useState('')
 
-  const loadStudents = useCallback(async () => {
+  const [formOpen, setFormOpen] = useState(false)
+  const [editing, setEditing] = useState(null)
+
+  const [deleteTarget, setDeleteTarget] = useState(null)
+
+  async function loadStudents() {
+    setLoading(true)
     try {
-      setError('')
       const data = await getStudents()
       setStudents(data)
+      setError('')
     } catch (err) {
-      setError(err.message ?? 'Error al cargar estudiantes')
+      console.error(err)
+      setError('No se pudieron cargar los estudiantes.')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }
 
   useEffect(() => {
     loadStudents()
-  }, [loadStudents])
+  }, [])
 
-  async function handleSubmit(formData) {
-    if (editingStudent) {
-      await updateStudent(editingStudent.id, formData)
+  const filteredStudents = useMemo(() => {
+    const term = search.trim().toLowerCase()
+    if (!term) return students
+    return students.filter((s) =>
+      [s.first_name, s.last_name, s.email, s.phone]
+        .filter(Boolean)
+        .some((field) => field.toLowerCase().includes(term))
+    )
+  }, [students, search])
+
+  function handleCreate() {
+    setEditing(null)
+    setFormOpen(true)
+  }
+
+  function handleEdit(student) {
+    setEditing(student)
+    setFormOpen(true)
+  }
+
+  async function handleSubmit(form) {
+    if (editing) {
+      await updateStudent(editing.id, form)
     } else {
-      await createStudent(formData)
+      await createStudent(form)
     }
+    setFormOpen(false)
+    setEditing(null)
     await loadStudents()
   }
 
-  async function handleConfirmDelete() {
-    try {
-      await deleteStudent(deletingStudent.id)
-      setConfirmOpen(false)
-      setDeletingStudent(null)
-      await loadStudents()
-    } catch (err) {
-      setError(err.message ?? 'Error al eliminar estudiante')
-      setConfirmOpen(false)
-    }
+  async function confirmDelete() {
+    await deleteStudent(deleteTarget.id)
+    setDeleteTarget(null)
+    await loadStudents()
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <PageTitle title="Students" subtitle="Gestión de estudiantes" />
-        <PrimaryButton
-          onClick={() => {
-            setEditingStudent(null)
-            setFormOpen(true)
-          }}
-        >
-          + Nuevo estudiante
-        </PrimaryButton>
-      </div>
+    <div className="p-6">
+      <PageTitle
+        title="Estudiantes"
+        subtitle="Gestión de estudiantes registrados"
+        action={<PrimaryButton onClick={handleCreate}>Nuevo Estudiante</PrimaryButton>}
+      />
 
-      {error && (
-        <p className="text-red-600 text-sm mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
-          {error}
-        </p>
-      )}
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Buscar estudiante..."
+        className="w-full mb-4 border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
 
       {loading ? (
         <p className="text-gray-400">Cargando estudiantes...</p>
-      ) : students.length === 0 ? (
-        <EmptyState message="No hay estudiantes registrados. Crea el primero." />
-      ) : (
-        <StudentTable
-          students={students}
-          onEdit={(student) => {
-            setEditingStudent(student)
-            setFormOpen(true)
-          }}
-          onDelete={(student) => {
-            setDeletingStudent(student)
-            setConfirmOpen(true)
-          }}
+      ) : error ? (
+        <p className="text-red-600 text-sm">{error}</p>
+      ) : filteredStudents.length === 0 ? (
+        <EmptyState
+          message={
+            search
+              ? 'No se encontraron estudiantes con ese criterio.'
+              : 'Aún no hay estudiantes registrados.'
+          }
         />
+      ) : (
+        <StudentTable students={filteredStudents} onEdit={handleEdit} onDelete={setDeleteTarget} />
       )}
 
       <StudentForm
         open={formOpen}
-        onClose={() => {
-          setFormOpen(false)
-          setEditingStudent(null)
-        }}
+        initialData={editing}
         onSubmit={handleSubmit}
-        initialData={editingStudent}
+        onCancel={() => {
+          setFormOpen(false)
+          setEditing(null)
+        }}
       />
 
       <ConfirmDialog
-        open={confirmOpen}
+        open={!!deleteTarget}
         title="Eliminar estudiante"
-        message={`¿Estás seguro de eliminar a ${deletingStudent?.first_name} ${deletingStudent?.last_name}?`}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => {
-          setConfirmOpen(false)
-          setDeletingStudent(null)
-        }}
+        message={`¿Seguro que deseas eliminar a ${deleteTarget?.first_name ?? ''} ${deleteTarget?.last_name ?? ''}? Esta acción no se puede deshacer.`}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
     </div>
   )

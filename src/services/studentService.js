@@ -1,10 +1,12 @@
-import { supabase } from './supabase'
+import { supabase } from './supabaseClient'
+
+const TABLE = 'students'
 
 export async function getStudents() {
   const { data, error } = await supabase
-    .from('students')
+    .from(TABLE)
     .select('*')
-    .order('last_name', { ascending: true })
+    .order('id', { ascending: true })
 
   if (error) throw error
   return data
@@ -12,47 +14,38 @@ export async function getStudents() {
 
 export async function createStudent(student) {
   const { data, error } = await supabase
-    .from('students')
-    .insert({
-      first_name: student.firstName,
-      last_name: student.lastName,
-      email: student.email,
-      birth_date: student.birthDate,
-    })
+    .from(TABLE)
+    .insert([
+      {
+        first_name: student.firstName,
+        last_name: student.lastName,
+        email: student.email,
+        phone: student.phone,
+      },
+    ])
     .select()
-    .single()
 
   if (error) throw error
-  return data
+  return data[0]
 }
 
 export async function updateStudent(id, student) {
   const { data, error } = await supabase
-    .from('students')
+    .from(TABLE)
     .update({
       first_name: student.firstName,
       last_name: student.lastName,
       email: student.email,
-      birth_date: student.birthDate,
+      phone: student.phone,
     })
     .eq('id', id)
     .select()
-    .single()
 
   if (error) throw error
-  return data
+  return data[0]
 }
 
 export async function deleteStudent(id) {
-  const { error } = await supabase.from('students').delete().eq('id', id)
+  const { error } = await supabase.from(TABLE).delete().eq('id', id)
   if (error) throw error
-}
-
-export async function getStudentsCount() {
-  const { count, error } = await supabase
-    .from('students')
-    .select('*', { count: 'exact', head: true })
-
-  if (error) throw error
-  return count ?? 0
 }
