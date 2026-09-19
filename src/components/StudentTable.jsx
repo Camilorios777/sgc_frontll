@@ -7,17 +7,17 @@ function StudentTable({ students, onEdit, onDelete }) {
             <th className="px-4 py-3">Nombre</th>
             <th className="px-4 py-3">Apellido</th>
             <th className="px-4 py-3">Correo</th>
-            <th className="px-4 py-3">Celular</th>
+            <th className="px-4 py-3">Fecha de nacimiento</th>
             <th className="px-4 py-3 text-right">Acciones</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {students.map((student) => (
             <tr key={student.id} className="hover:bg-gray-50">
-              <td className="px-4 py-3 text-gray-800">{student.first_name}</td>
-              <td className="px-4 py-3 text-gray-800">{student.last_name}</td>
+              <td className="px-4 py-3 text-gray-800">{student.firstName}</td>
+              <td className="px-4 py-3 text-gray-800">{student.lastName}</td>
               <td className="px-4 py-3 text-gray-600">{student.email}</td>
-              <td className="px-4 py-3 text-gray-600">{student.phone}</td>
+              <td className="px-4 py-3 text-gray-600">{student.birthDate}</td>
               <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
                 <button
                   onClick={() => onEdit(student)}

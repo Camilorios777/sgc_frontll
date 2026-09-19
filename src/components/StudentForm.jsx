@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import PrimaryButton from './PrimaryButton'
 
-const emptyForm = { firstName: '', lastName: '', email: '', phone: '' }
+const emptyForm = { firstName: '', lastName: '', email: '', birthDate: '' }
 
 function StudentForm({ open, initialData, onSubmit, onCancel }) {
   const [form, setForm] = useState(emptyForm)
@@ -10,10 +10,10 @@ function StudentForm({ open, initialData, onSubmit, onCancel }) {
   useEffect(() => {
     if (initialData) {
       setForm({
-        firstName: initialData.first_name ?? '',
-        lastName: initialData.last_name ?? '',
+        firstName: initialData.firstName ?? '',
+        lastName: initialData.lastName ?? '',
         email: initialData.email ?? '',
-        phone: initialData.phone ?? '',
+        birthDate: initialData.birthDate ?? '',
       })
     } else {
       setForm(emptyForm)
@@ -29,7 +29,7 @@ function StudentForm({ open, initialData, onSubmit, onCancel }) {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.firstName || !form.lastName || !form.email || !form.phone) {
+    if (!form.firstName || !form.lastName || !form.email || !form.birthDate) {
       setError('Todos los campos son obligatorios.')
       return
     }
@@ -80,13 +80,12 @@ function StudentForm({ open, initialData, onSubmit, onCancel }) {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-600">Celular</label>
+            <label className="text-sm font-medium text-gray-600">Fecha de nacimiento</label>
             <input
-              type="tel"
-              name="phone"
-              value={form.phone}
+              type="date"
+              name="birthDate"
+              value={form.birthDate}
               onChange={handleChange}
-              placeholder="Ej: 3052342345"
               className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>

@@ -4,7 +4,7 @@ import {
   createStudent,
   updateStudent,
   deleteStudent,
-} from '../services/studentService'
+} from '../services/studentBdService'
 import PageTitle from '../components/PageTitle'
 import PrimaryButton from '../components/PrimaryButton'
 import StudentTable from '../components/StudentTable'
@@ -45,7 +45,7 @@ function Students() {
     const term = search.trim().toLowerCase()
     if (!term) return students
     return students.filter((s) =>
-      [s.first_name, s.last_name, s.email, s.phone]
+      [s.firstName, s.lastName, s.email]
         .filter(Boolean)
         .some((field) => field.toLowerCase().includes(term))
     )
@@ -123,7 +123,7 @@ function Students() {
       <ConfirmDialog
         open={!!deleteTarget}
         title="Eliminar estudiante"
-        message={`¿Seguro que deseas eliminar a ${deleteTarget?.first_name ?? ''} ${deleteTarget?.last_name ?? ''}? Esta acción no se puede deshacer.`}
+        message={`¿Seguro que deseas eliminar a ${deleteTarget?.firstName ?? ''} ${deleteTarget?.lastName ?? ''}? Esta acción no se puede deshacer.`}
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />
