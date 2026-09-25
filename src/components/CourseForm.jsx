@@ -13,7 +13,7 @@ function CourseForm({ open, initialData, onSubmit, onCancel }) {
         code: initialData.code ?? '',
         name: initialData.name ?? '',
         description: initialData.description ?? '',
-        maxCapacity: initialData.max_capacity ?? '',
+        maxCapacity: initialData.maxCapacity ?? '',
       })
     } else {
       setForm(emptyForm)

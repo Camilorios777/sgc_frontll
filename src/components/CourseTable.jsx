@@ -19,7 +19,7 @@ function CourseTable({ courses, onEdit, onDelete }) {
               <td className="px-4 py-3 text-gray-600 max-w-xs truncate">
                 {course.description}
               </td>
-              <td className="px-4 py-3 text-gray-600">{course.max_capacity}</td>
+              <td className="px-4 py-3 text-gray-600">{course.maxCapacity}</td>
               <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
                 <button
                   onClick={() => onEdit(course)}

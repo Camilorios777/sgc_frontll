@@ -27,7 +27,7 @@ function EnrollmentForm({ open, students, courses, onSubmit, onCancel }) {
     try {
       await onSubmit({ studentId: Number(studentId), courseId: Number(courseId) })
     } catch (err) {
-      setError(err.message ?? 'Ocurrió un error al matricular.')
+      setError(err.response?.data?.message ?? err.message ?? 'Ocurrió un error al matricular.')
     } finally {
       setSaving(false)
     }
@@ -49,7 +49,7 @@ function EnrollmentForm({ open, students, courses, onSubmit, onCancel }) {
               <option value="">Selecciona un estudiante</option>
               {students.map((student) => (
                 <option key={student.id} value={student.id}>
-                  {student.first_name} {student.last_name}
+                  {student.firstName} {student.lastName}
                 </option>
               ))}
             </select>

@@ -27,16 +27,16 @@ function EnrollmentTable({ enrollments, onChangeStatus, onDelete }) {
           {enrollments.map((enrollment) => (
             <tr key={enrollment.id} className="hover:bg-gray-50">
               <td className="px-4 py-3 text-gray-800">
-                {enrollment.students
-                  ? `${enrollment.students.first_name} ${enrollment.students.last_name}`
+                {enrollment.student
+                  ? `${enrollment.student.firstName} ${enrollment.student.lastName}`
                   : '—'}
               </td>
               <td className="px-4 py-3 text-gray-800">
-                {enrollment.courses
-                  ? `${enrollment.courses.code} - ${enrollment.courses.name}`
+                {enrollment.course
+                  ? `${enrollment.course.code} - ${enrollment.course.name}`
                   : '—'}
               </td>
-              <td className="px-4 py-3 text-gray-600">{enrollment.enrollment_date}</td>
+              <td className="px-4 py-3 text-gray-600">{enrollment.enrollmentDate}</td>
               <td className="px-4 py-3">
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[enrollment.status]}`}

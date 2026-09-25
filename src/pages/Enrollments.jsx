@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   getEnrollments,
   createEnrollment,
-  updateEnrollmentStatus,
+  cancelEnrollment,
+  completeEnrollment,
   deleteEnrollment,
-} from '../services/enrollmentService'
-import { getStudents } from '../services/studentService'
-import { getCourses } from '../services/courseService'
+} from '../services/enrollmentBdService'
+import { getStudents } from '../services/studentBdService'
+import { getCourses } from '../services/courseBdService'
 import PageTitle from '../components/PageTitle'
 import PrimaryButton from '../components/PrimaryButton'
 import EnrollmentTable from '../components/EnrollmentTable'
@@ -49,34 +50,41 @@ function Enrollments() {
     loadData()
   }, [])
 
+  // El backend solo devuelve studentId/courseId sueltos, asi que aqui
+  // "unimos" cada matricula con su estudiante y curso completos.
+  const enrichedEnrollments = useMemo(() => {
+    return enrollments.map((e) => ({
+      ...e,
+      student: students.find((s) => s.id === e.studentId) || null,
+      course: courses.find((c) => c.id === e.courseId) || null,
+    }))
+  }, [enrollments, students, courses])
+
   const filteredEnrollments = useMemo(() => {
     const term = search.trim().toLowerCase()
-    if (!term) return enrollments
-    return enrollments.filter((e) => {
-      const studentName = e.students
-        ? `${e.students.first_name} ${e.students.last_name}`
-        : ''
-      const courseName = e.courses ? `${e.courses.code} ${e.courses.name}` : ''
+    if (!term) return enrichedEnrollments
+    return enrichedEnrollments.filter((e) => {
+      const studentName = e.student ? `${e.student.firstName} ${e.student.lastName}` : ''
+      const courseName = e.course ? `${e.course.code} ${e.course.name}` : ''
       return (
         studentName.toLowerCase().includes(term) ||
         courseName.toLowerCase().includes(term)
       )
     })
-  }, [enrollments, search])
+  }, [enrichedEnrollments, search])
 
   async function handleSubmit({ studentId, courseId }) {
-    const course = courses.find((c) => c.id === courseId)
-    await createEnrollment({
-      studentId,
-      courseId,
-      maxCapacity: course?.max_capacity,
-    })
+    await createEnrollment({ studentId, courseId })
     setFormOpen(false)
     await loadData()
   }
 
   async function handleChangeStatus(enrollment, status) {
-    await updateEnrollmentStatus(enrollment.id, status)
+    if (status === 'COMPLETED') {
+      await completeEnrollment(enrollment.id)
+    } else if (status === 'CANCELLED') {
+      await cancelEnrollment(enrollment.id)
+    }
     await loadData()
   }
 

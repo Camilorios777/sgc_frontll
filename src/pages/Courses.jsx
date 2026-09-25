@@ -4,7 +4,7 @@ import {
   createCourse,
   updateCourse,
   deleteCourse,
-} from '../services/courseService'
+} from '../services/courseBdService'
 import PageTitle from '../components/PageTitle'
 import PrimaryButton from '../components/PrimaryButton'
 import CourseTable from '../components/CourseTable'
